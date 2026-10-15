@@ -1,7 +1,7 @@
 {
-  "name": "dius-code-style",
+  "name": "code-style",
   "version": "0.1.0",
-  "description": "Org-wide code style standards applied in every Dius-ai repository",
+  "description": "Org-wide code style standards applied in every repository",
   "author": {
     "name": "Dius-ai"
   },

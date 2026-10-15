@@ -1,20 +1,20 @@
 {
-  "name": "dius-cursor-plugins",
+  "name": "cursor-plugins",
   "owner": {
     "name": "Dius-ai"
   },
   "metadata": {
-    "description": "Cursor plugins with shared skills and rules for Dius-ai repositories"
+    "description": "Shared Cursor skills and rules for all team repositories"
   },
   "plugins": [
     {
-      "name": "dius-workflow",
-      "source": "dius-workflow",
+      "name": "dev-workflow",
+      "source": "dev-workflow",
       "description": "Pull requests, Jira ticket PR reviews and security scans"
     },
     {
-      "name": "dius-code-style",
-      "source": "dius-code-style",
+      "name": "code-style",
+      "source": "code-style",
       "description": "Org-wide code style rule"
     }
   ]

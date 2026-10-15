@@ -2,7 +2,7 @@
 name: jira-pr-review
 description: >-
   Fetch Jira work items with the acli CLI and GitHub pull requests with the gh CLI, and review all
-  PRs linked to a Jira ticket across Dius-ai repositories. Use when the user mentions a Jira key
+  PRs linked to a Jira ticket across the organization's repositories. Use when the user mentions a Jira key
   (SUP-123, SK-45) or a dius-team.atlassian.net URL, asks about a ticket's status, description or
   comments, or asks to find, list, or review PRs for a ticket.
 ---
@@ -42,7 +42,7 @@ gh pr checks <n> -R Dius-ai/<repo>
 - `gh pr diff` output is truncated in tool results for large PRs. Read full files at the PR head instead:
   `git -C <clone> fetch -q origin <headRefName> && git -C <clone> show FETCH_HEAD:<path>`
 
-Other Dius-ai repositories are usually cloned as siblings of the current repository (`../datamap`, `../dataapi`, `../jarvis_core`, ...). Use them to read code the diff touches but does not show. If a clone is missing, read files with `gh api repos/Dius-ai/<repo>/contents/<path>?ref=<headRefName> -H "Accept: application/vnd.github.raw"`.
+Other team repositories are usually cloned as siblings of the current repository (`../datamap`, `../dataapi`, `../jarvis_core`, ...). Use them to read code the diff touches but does not show. If a clone is missing, read files with `gh api repos/Dius-ai/<repo>/contents/<path>?ref=<headRefName> -H "Accept: application/vnd.github.raw"`.
 
 ## Reviewing a ticket's PRs
 

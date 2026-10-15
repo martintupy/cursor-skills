@@ -1,11 +1,11 @@
-# Dius-ai Cursor Plugins
+# Cursor Plugins
 
-The single source of shared Cursor skills and rules for Dius-ai repositories. It is a [Cursor team marketplace](https://cursor.com/docs/plugins.md#team-marketplaces): change a skill here once and every repository gets it, instead of copying it into each repo.
+The single source of shared Cursor skills and rules for all team repositories. It is a [Cursor team marketplace](https://cursor.com/docs/plugins.md#team-marketplaces): change a skill here once and every repository gets it, instead of copying it into each repo.
 
 | Plugin | Contains | Install mode |
 | --- | --- | --- |
-| `dius-workflow` | Skills: `pull-request`, `jira-pr-review`, `vulnerability-scan` | Default On |
-| `dius-code-style` | Always-applied rule: `code-style` | Required |
+| `dev-workflow` | Skills: `pull-request`, `jira-pr-review`, `vulnerability-scan` | Default On |
+| `code-style` | Always-applied rule: `code-style` | Required |
 
 ## Use the plugins
 
@@ -31,7 +31,7 @@ Install the plugins locally. Cursor ignores symlinks that point outside `~/.curs
 ```bash
 git clone git@github.com:Dius-ai/cursor-plugins.git
 cd cursor-plugins
-for plugin in dius-workflow dius-code-style; do
+for plugin in dev-workflow code-style; do
   rsync -a --delete "$plugin/" "$HOME/.cursor/plugins/local/$plugin/"
 done
 ```
@@ -42,7 +42,7 @@ Then run **Developer: Reload Window**. Rerun the loop after every `git pull`.
 
 - `gh` authenticated with access to the Dius-ai org: `gh auth login`
 - `acli` authenticated with dius-team.atlassian.net, for `jira-pr-review`: `acli jira auth login`
-- Other Dius-ai repositories cloned next to each other (`~/github/Dius-ai/datamap`, `~/github/Dius-ai/dataapi`, ...), for cross-repo PR reviews
+- Team repositories cloned next to each other (`~/github/<org>/datamap`, `~/github/<org>/dataapi`, ...), for cross-repo PR reviews
 
 ## Change a plugin
 

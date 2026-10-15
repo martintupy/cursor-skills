@@ -1,58 +1,48 @@
-# Cursor Plugins
+# Cursor Skills
 
-The single source of shared Cursor skills and rules for all team repositories. It is a [Cursor team marketplace](https://cursor.com/docs/plugins.md#team-marketplaces): change a skill here once and every repository gets it, instead of copying it into each repo.
+Shared Cursor skills for all team repositories. Cursor loads every skill in `~/.cursor/skills/`, so cloning this repo there makes the skills available in every project, and `git pull` keeps them up to date.
 
-| Plugin | Contains | Install mode |
+| Skill | Use it for | Trigger |
 | --- | --- | --- |
-| `dev-workflow` | Skills: `pull-request`, `jira-pr-review`, `vulnerability-scan` | Default On |
-| `code-style` | Always-applied rule: `code-style` | Required |
+| `pull-request` | Create or update a PR with a Conventional Commits title and structured description | `/pull-request` |
+| `jira-pr-review` | Review all PRs linked to a Jira ticket across repositories | Automatic when you mention a Jira key or URL |
+| `vulnerability-scan` | Security audit of the current repository | `/vulnerability-scan` |
 
-## Use the plugins
+## Install
 
-### Team admin, once
+1. Install and log in to the CLIs the skills use:
 
-Requires a Cursor Teams or Enterprise plan.
+   ```bash
+   brew install gh && gh auth login
+   brew tap atlassian/acli && brew install acli && acli jira auth login
+   ```
 
-1. Install the [Cursor GitHub App](https://github.com/apps/cursor) on `Dius-ai/cursor-plugins`.
-2. Open [Dashboard](https://cursor.com/dashboard) → **Plugins & MCPs** → **Team Marketplaces** → **Add Marketplace** → **Import from Repo**, and paste `https://github.com/Dius-ai/cursor-plugins`.
-3. Under **Marketplace Settings**, turn on **Enable Auto Refresh** and save.
-4. Set each plugin's install mode as shown in the table above.
+2. Clone this repo as your personal skills folder. If `~/.cursor/skills` already exists, move its contents out first, since `git clone` needs an empty folder:
 
-### Developers
+   ```bash
+   git clone git@github.com:Dius-ai/cursor-skills.git ~/.cursor/skills
+   ```
 
-Nothing to do for Required and Default On plugins: they install automatically. Run **Developer: Reload Window** if you don't see them yet, then check **Customize** in the sidebar.
+3. Restart Cursor, or run **Developer: Reload Window**, and check that the skills appear under **Customize** → **Skills**.
 
-Remove any personal copies of these skills from `~/.cursor/skills/` and local copies from `~/.cursor/plugins/local/`, so you don't end up with two skills of the same name.
-
-### Without a team plan
-
-Install the plugins locally. Cursor ignores symlinks that point outside `~/.cursor/plugins/local`, so copy the files:
+## Update
 
 ```bash
-git clone git@github.com:Dius-ai/cursor-plugins.git
-cd cursor-plugins
-for plugin in dev-workflow code-style; do
-  rsync -a --delete "$plugin/" "$HOME/.cursor/plugins/local/$plugin/"
-done
+git -C ~/.cursor/skills pull
 ```
 
-Then run **Developer: Reload Window**. Rerun the loop after every `git pull`.
+## Change or add a skill
 
-### Prerequisites for the skills
+Edit directly in `~/.cursor/skills`, on a branch, and open a PR:
 
-- `gh` authenticated with access to the Dius-ai org: `gh auth login`
-- `acli` authenticated with dius-team.atlassian.net, for `jira-pr-review`: `acli jira auth login`
-- Team repositories cloned next to each other (`~/github/<org>/datamap`, `~/github/<org>/dataapi`, ...), for cross-repo PR reviews
-
-## Change a plugin
-
-1. Edit the files on a branch and test them locally with the `rsync` loop above.
-2. Open a PR. Once it merges to `main`, Auto Refresh publishes the change to the team within about 10 minutes.
-
-To add a skill, create `<plugin>/skills/<skill-name>/SKILL.md` with `name` and `description` frontmatter; `name` must match the folder name. To add a rule, create `<plugin>/rules/<rule-name>.mdc` with `description` and `alwaysApply` (or `globs`) frontmatter. To add a plugin, create `<plugin>/.cursor-plugin/plugin.json` and list it in `.cursor-plugin/marketplace.json`. Paths must stay inside the plugin folder; `..` is not allowed.
+1. Create `<skill-name>/SKILL.md` at the top level, with `name` (equal to the folder name) and `description` frontmatter. Cursor does not find skills nested deeper.
+2. Add `disable-model-invocation: true` to the frontmatter if the skill should only run when called with `/<skill-name>`.
+3. Reload Cursor and try the skill before opening the PR.
 
 ## What belongs here
 
-Add a skill or rule here when it applies to several repositories, such as PR workflow, Jira, code style or security scanning. Keep it in the repository's own `.cursor/skills/` or `AGENTS.md` when it only makes sense there, such as datamap's `aks-debug` or jarvis_core's `create-migration`.
+A skill belongs here when it applies to several repositories. It stays in the repository's own `.cursor/skills/` when it only makes sense there, such as datamap's `aks-debug` or jarvis_core's `create-migration`.
 
-Skills here must not hardcode one repository's commands or paths. Have them look these up in the repository's `AGENTS.md`, `Makefile` or a known file, the way `vulnerability-scan` reads `.cursor/security-context.md`.
+Skills here must not hardcode one repository's commands or paths. They should look them up in the repository's `AGENTS.md`, `Makefile` or a known file, the way `vulnerability-scan` reads `.cursor/security-context.md`.
+
+Rules, such as code style, are not shared through this repo: Cursor has no file-based user-level rules. Keep them in each repository's `AGENTS.md` or `.cursor/rules/`.

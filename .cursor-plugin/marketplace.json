@@ -1,10 +1,10 @@
 {
-  "name": "dius-ai",
+  "name": "dius-cursor-plugins",
   "owner": {
     "name": "Dius-ai"
   },
   "metadata": {
-    "description": "Shared agent skills and rules for Dius-ai repositories"
+    "description": "Cursor plugins with shared skills and rules for Dius-ai repositories"
   },
   "plugins": [
     {

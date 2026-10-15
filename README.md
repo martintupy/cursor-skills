@@ -20,7 +20,7 @@ Shared Cursor skills for all team repositories. Cursor loads every skill in `~/.
 2. Clone this repo as your personal skills folder. If `~/.cursor/skills` already exists, move its contents out first, since `git clone` needs an empty folder:
 
    ```bash
-   git clone git@github.com:Dius-ai/cursor-skills.git ~/.cursor/skills
+   git clone https://github.com/martintupy/cursor-skills.git ~/.cursor/skills
    ```
 
 3. Restart Cursor, or run **Developer: Reload Window**, and check that the skills appear under **Customize** → **Skills**.

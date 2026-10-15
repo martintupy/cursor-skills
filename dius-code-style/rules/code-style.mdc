@@ -1,0 +1,32 @@
+---
+description: Dius-ai code style standards for comments, structure and formatting
+alwaysApply: true
+---
+
+# Code Style Standards
+
+## Comments Policy
+
+- Write self-documenting code with clear variable and function names
+- **ALWAYS preserve function/method docstrings** - these are essential for API documentation
+- Only add inline comments for:
+  - Complex algorithms or business logic
+  - Non-obvious "why" decisions (never "what" the code does)
+  - Important edge cases or gotchas
+- NO trivial inline comments that restate code
+- NO comments for simple operations, imports, or obvious logic
+- **Function docstrings should include**: Args, Returns, and brief description when not obvious
+
+## General Principles
+
+- Follow DRY, KISS, and YAGNI
+- Prefer functional patterns over OOP where appropriate
+- Keep functions small and focused (max 50 lines)
+- Use explicit error handling - never silent failures
+- Type everything (TypeScript strict mode, Python type hints)
+
+## Spacing & Formatting
+
+- NO excessive blank lines - maximum 1 blank line between code blocks
+- NO blank lines at start/end of functions
+- Use blank lines only to separate logical sections

@@ -1,0 +1,9 @@
+{
+  "name": "dius-workflow",
+  "version": "0.1.0",
+  "description": "Create pull requests, review all PRs of a Jira ticket across Dius-ai repositories, and scan for security vulnerabilities",
+  "author": {
+    "name": "Dius-ai"
+  },
+  "keywords": ["pull-request", "jira", "code-review", "security"]
+}

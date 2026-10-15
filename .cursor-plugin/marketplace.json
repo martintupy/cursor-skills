@@ -1,0 +1,21 @@
+{
+  "name": "dius-ai",
+  "owner": {
+    "name": "Dius-ai"
+  },
+  "metadata": {
+    "description": "Shared agent skills and rules for Dius-ai repositories"
+  },
+  "plugins": [
+    {
+      "name": "dius-workflow",
+      "source": "dius-workflow",
+      "description": "Pull requests, Jira ticket PR reviews and security scans"
+    },
+    {
+      "name": "dius-code-style",
+      "source": "dius-code-style",
+      "description": "Org-wide code style rule"
+    }
+  ]
+}

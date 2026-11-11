@@ -203,11 +203,18 @@ def _slug(name: str) -> str:
     return re.sub(r"[^A-Za-z0-9_.-]+", "_", name).strip("_") or "unnamed"
 
 
-def _run_name(env: Env, instance_ids: list[str]) -> str:
-    """Output folder name: first root's name, plus ``+N`` for further roots."""
-    name = _slug(env.by_id[instance_ids[0]].name)
-    extra = len(dict.fromkeys(instance_ids)) - 1
-    return f"{name}+{extra}" if extra else name
+def _scratch_dir(run: str | None, env: Env, instance_ids: list[str], leaf: str) -> Path:
+    """``/tmp/jarvis-entities/<run>/.scratch/<leaf>``.
+
+    ``run`` defaults to the first root's name, plus ``+N`` for further roots.
+    """
+    if not run:
+        name = _slug(env.by_id[instance_ids[0]].name)
+        extra = len(dict.fromkeys(instance_ids)) - 1
+        run = f"{name}+{extra}" if extra else name
+    path = OUT_ROOT / _slug(run) / ".scratch" / leaf
+    path.mkdir(parents=True, exist_ok=True)
+    return path
 
 
 def _stems(entities: list[Entity]) -> dict[str, str]:
@@ -281,7 +288,7 @@ def _write_entity_files(out: Path, stem: str, entity: Entity) -> None:
 def context(
     instance_ids: Annotated[list[str], typer.Argument(help="Agent/skill/tool IDs")],
     env: Annotated[str, typer.Option("--env", "-e")] = "dev",
-    out: Annotated[Path | None, typer.Option(help="Output dir")] = None,
+    run: Annotated[str | None, typer.Option("--run", "-r", help="Run folder")] = None,
 ) -> None:
     """Resolve the reference closure and dump each entity to files."""
     loaded = _load_env(env)
@@ -289,8 +296,7 @@ def context(
     if unknown:
         raise SystemExit(f"not an agent/skill/tool/mcp instance on {env}: {unknown}")
     entities, dangling = loaded.closure(instance_ids)
-    target = out or OUT_ROOT / env / _run_name(loaded, instance_ids)
-    target.mkdir(parents=True, exist_ok=True)
+    target = _scratch_dir(run, loaded, instance_ids, env)
     stems = _stems(entities)
     for entity in entities:
         _write_entity_files(target, stems[entity.id], entity)
@@ -359,7 +365,7 @@ def diff(
     instance_ids: Annotated[list[str], typer.Argument(help="IDs on the source env")],
     source: Annotated[str, typer.Option("--source", "-s")] = "dev",
     target: Annotated[str, typer.Option("--target", "-t")] = "prod",
-    out: Annotated[Path | None, typer.Option(help="Output dir for .diff files")] = None,
+    run: Annotated[str | None, typer.Option("--run", "-r", help="Run folder")] = None,
 ) -> None:
     """Compare the closure on SOURCE against TARGET (matched by ID, then name)."""
     src, dst = _load_env(source), _load_env(target)
@@ -376,8 +382,7 @@ def diff(
     dst_roots = [m.id for i in instance_ids if (m := match(src.by_id[i], dst))]
     dst_entities, dst_dangling = dst.closure(dst_roots)
 
-    out_dir = out or OUT_ROOT / f"diff-{source}-{target}" / _run_name(src, instance_ids)
-    out_dir.mkdir(parents=True, exist_ok=True)
+    out_dir = _scratch_dir(run, src, instance_ids, f"diff-{source}-{target}")
     stems = _stems(src_entities)
 
     typer.echo(

@@ -28,23 +28,24 @@ Run from inside `<jarvis_core>` or `<datamap>` with the datamap venv:
 ```bash
 PY=<datamap>/.venv/bin/python3
 E=~/.cursor/skills/jarvis-entities/scripts/entities.py
-$PY $E context <instance_id>... [-e dev|prod]          # closure tree + files
-$PY $E diff <instance_id>... [-s dev] [-t prod]        # drift report + .diff files
+$PY $E context <instance_id>... -r <slug> [-e dev|prod]    # closure tree + files
+$PY $E diff <instance_id>... -r <slug> [-s dev] [-t prod]  # drift report + .diff files
 ```
 
 Auth comes from datamap's `datamap-api` skill (`bruno/.env` with `DEV_API_TOKEN` and
 `PROD_API_TOKEN`). The script finds datamap the same way; set `DATAMAP_REPO` if it is cloned
 elsewhere. For anything else (e.g. finding an ID by name) use that skill directly.
 
-- `context` writes `/tmp/jarvis-entities/<env>/<root>/`: `<kind>.<name>.json` (full instance)
-  and `<kind>.<name>.<field>.txt` per text field (`system_prompt`, `prompt`, `description`).
-- `diff` matches by instance_id, then by name for shared entities. It reports `IN SYNC`,
-  `DRIFT` (changed fields, reference differences by name, and which side was edited last),
-  `ONLY ON <ENV>` and `REACHABLE ONLY ON <ENV>`. It writes `--- dev / +++ prod` diffs to
-  `/tmp/jarvis-entities/diff-<src>-<dst>/<root>/`. URLs that differ only by dev/prod host, and
-  scalar lists that differ only in order (e.g. `required`), are noted on the entity line, not
-  reported as drift.
-- With several IDs, `<root>` is the first entity's name plus `+N`.
+Pick one short kebab-case `<slug>` per request and pass it to every call. Everything for the
+request lives in `/tmp/jarvis-entities/<slug>/`; the script writes only to its `.scratch/`:
+
+- `context` → `.scratch/<env>/`: `<kind>.<name>.json` (full instance) and
+  `<kind>.<name>.<field>.txt` per text field (`system_prompt`, `prompt`, `description`).
+- `diff` → `.scratch/diff-<src>-<dst>/`: `--- dev / +++ prod` diffs per drifting field. It
+  matches by instance_id, then by name for shared entities, and reports `IN SYNC`, `DRIFT`
+  (changed fields, reference differences by name, which side was edited last), `ONLY ON <ENV>`
+  and `REACHABLE ONLY ON <ENV>`. URLs differing only by dev/prod host, and scalar lists differing
+  only in order (e.g. `required`), are noted on the entity line, not reported as drift.
 
 ## Workflow
 
@@ -54,7 +55,7 @@ elsewhere. For anything else (e.g. finding an ID by name) use that skill directl
 - [ ] 3. Drift baseline (dev vs prod)
 - [ ] 4. Plan, confirmed with the user
 - [ ] 5. Code changes (jarvis_core / datamap)
-- [ ] 6. Entity edits written to /tmp
+- [ ] 6. Entity edits + README.md in /tmp/jarvis-entities/<slug>/
 - [ ] 7. Prod parity plan
 ```
 
@@ -111,50 +112,60 @@ entity edits depend on (a new `module_path`, a new endpoint), because it must sh
 
 ### 6. Entity edits to /tmp
 
-Write to `/tmp/jarvis-entities/changes/<short-slug>/`:
+Layout of `/tmp/jarvis-entities/<slug>/`:
 
-- `<kind>.<name>.<field>.txt` for strings, `.json` for structured fields. **Exact paste-ready
-  value only**: no headers or commentary. Write the full new value, not a fragment.
-- `<kind>.<name>.<field>.diff`: `diff -u <context file> <new file>` against the current dev value.
-- `CHANGES.md`: the index below.
+```
+README.md                         # the only file the user has to read
+dev/1-<kind>-<name>-<field>.txt   # paste-ready values, numbered = README step
+prod/4-<kind>-<name>-<field>.txt  # numbering continues after dev
+review/<env>-<n>-....diff         # current value vs new value, per step
+.scratch/                         # script output; never referenced from README steps
+```
 
-For reference lists, write the complete new list with IDs for **each** env, because IDs can
-differ between dev and prod (`diff` prints `matched by name: prod id ...`).
+- One file per field edit, `.txt` for strings and `.json` for structured fields. **Exact
+  paste-ready value only**: no headers or commentary, the full new value, not a fragment.
+- Order steps by dependency: tools, then skills, then agents (a prompt must not name a tool
+  before it is attached).
+- Reference lists: write the complete new list with that env's IDs (IDs can differ, see
+  `matched by name: prod id ...` in the diff). Name the added/removed entities in the step.
+- Review diffs: `diff -u --label current --label new <.scratch file> <new file>`.
+
+`README.md` template (keep it this short; detail goes in "Why"):
 
 ```markdown
 # <title>
 
-Request: <one line>
+<one sentence: what changes and why>
 
-## Datamap edits (manual)
+## On dev now
 
-| # | Env | Entity | Instance ID | Field | New value | Diff |
-|---|-----|--------|-------------|-------|-----------|------|
-| 1 | dev | skill:<name> | <uuid> | prompt | skill.<name>.prompt.txt | skill.<name>.prompt.diff |
+1. **tool `<name>`** (`<instance_id>`) → field `description`
+   paste `dev/1-tool-<name>-description.txt`
+2. **skill `<name>`** (`<instance_id>`) → field `allowed_tools`
+   paste `dev/2-skill-<name>-allowed_tools.json` (adds `<tool>`, `<tool>`)
+3. ...
 
-1. <why, one sentence per row>
+## On prod later (after dev is verified)
 
-## Code changes
+0. Deploy code first: <repo changes prod depends on, or "nothing">
+4. ...
 
-- jarvis_core: <files / PR>
-- datamap: <files / PR>
+## Why
 
-## Prod parity
+- Step 1: <one sentence>
+- Prod was ahead on <...>; folded into step <n>.
 
-### Backport to dev first (prod is ahead)
-- <entity.field / reference>: <what, and its file>
+## Not changed / open issues
 
-### Promote to prod after dev is verified
-1. Deploy code: <repo changes that prod entities depend on>
-2. Entity edits on prod: <rows above with prod instance IDs, tools → skills → agents>
-
-### Intentional differences
-- <env-specific URLs, user-owned entities, ...>
+- <intentional env differences, open questions>
 ```
+
+Steps with no prod counterpart, or prod-only backports, still get a number in the right
+section. If the user supplied a studio URL, add it to that entity's step.
 
 ### 7. Prod parity
 
-Fill the "Prod parity" section from the `diff` output:
+Fill the "On prod later", "Why" and "Not changed" sections from the `diff` output:
 
 - **Backport**: anything prod has that dev lacks, so dev is a superset of prod.
 - **Promote**: dev changes for prod, in dependency order (code deploy, then tools, skills, agents).
@@ -168,5 +179,5 @@ Fill the "Prod parity" section from the `diff` output:
 
 ## Final report
 
-In chat: what the agent/skill/tool does today (short), the plan split into code and entity
-edits, the path to `CHANGES.md`, and drift findings, with prod-ahead items first.
+In chat: what the agent/skill/tool does today (short), the path to `README.md`, the dev steps
+as a short numbered list, and drift findings, with prod-ahead items first.

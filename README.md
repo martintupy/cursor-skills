@@ -6,6 +6,7 @@ Shared Cursor skills for all team repositories. Cursor loads every skill in `~/.
 | --- | --- | --- |
 | `pull-request` | Create or update a PR with a Conventional Commits title and structured description | `/pull-request` |
 | `jira-pr-review` | Review all PRs linked to a Jira ticket across repositories | Automatic when you mention a Jira key or URL |
+| `consolidate-file` | Deduplicate and reorganize a file after feature work so it reads as one coherent unit | `/consolidate-file` |
 | `vulnerability-scan` | Security audit of the current repository | `/vulnerability-scan` |
 
 ## Install

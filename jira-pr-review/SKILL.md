@@ -57,6 +57,7 @@ Other team repositories are usually cloned as siblings of the current repository
 6. **Against the ticket**: check whether the PRs together satisfy the acceptance criteria, and what is missing or out of scope.
 
 Review checklist per PR:
+
 - Correctness and edge cases (empty values, missing keys, type mismatches such as UUID vs str dict keys)
 - Silent failures or swallowed errors
 - Tests that actually cover the new behaviour, including the negative path
@@ -73,14 +74,17 @@ Report in chat only. Never post comments, approve, or request changes on GitHub,
 <one-paragraph verdict: ready to merge / needs changes, and the main reason>
 
 ### Cross-PR issues
+
 - ...
 
 ### <repo>#<n> <title> (CI: pass/fail)
+
 - **Blocker**: <issue> — `path:line`, why it matters, suggested fix
 - **Should fix**: ...
 - **Nit**: ...
 
 ### Open questions
+
 - ...
 ```
 

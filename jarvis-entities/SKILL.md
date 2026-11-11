@@ -102,6 +102,10 @@ Classify every part of the request:
 - **b. Entity edits**: `system_prompt`, `prompt`, `description`, `parameters_schema`,
   `location_config`, `allowed_tools` / `skills` references, new entities.
 
+Tool descriptions are shared by every skill and agent that attaches the tool: keep them
+generic and concise (what it does, inputs, what it returns). Workflow-specific guidance (which
+tool to call when, how to use a returned field) belongs in the skill or agent prompt.
+
 Present the plan and challenge the request where code and entities disagree, or where a prompt
 change is compensating for a code problem. Wait for confirmation before step 5.
 

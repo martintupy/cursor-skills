@@ -41,8 +41,10 @@ elsewhere. For anything else (e.g. finding an ID by name) use that skill directl
 - `diff` matches by instance_id, then by name for shared entities. It reports `IN SYNC`,
   `DRIFT` (changed fields, reference differences by name, and which side was edited last),
   `ONLY ON <ENV>` and `REACHABLE ONLY ON <ENV>`. It writes `--- dev / +++ prod` diffs to
-  `/tmp/jarvis-entities/diff-<src>-<dst>/<root>/`. URLs that differ only by dev/prod host are
-  reported as env-specific, not as drift.
+  `/tmp/jarvis-entities/diff-<src>-<dst>/<root>/`. URLs that differ only by dev/prod host, and
+  scalar lists that differ only in order (e.g. `required`), are noted on the entity line, not
+  reported as drift.
+- With several IDs, `<root>` is the first entity's name plus `+N`.
 
 ## Workflow
 

@@ -203,6 +203,13 @@ def _slug(name: str) -> str:
     return re.sub(r"[^A-Za-z0-9_.-]+", "_", name).strip("_") or "unnamed"
 
 
+def _run_name(env: Env, instance_ids: list[str]) -> str:
+    """Output folder name: first root's name, plus ``+N`` for further roots."""
+    name = _slug(env.by_id[instance_ids[0]].name)
+    extra = len(dict.fromkeys(instance_ids)) - 1
+    return f"{name}+{extra}" if extra else name
+
+
 def _stems(entities: list[Entity]) -> dict[str, str]:
     """File stem per entity id, suffixed with the short id on name collisions."""
     stems: dict[str, str] = {}
@@ -282,7 +289,7 @@ def context(
     if unknown:
         raise SystemExit(f"not an agent/skill/tool/mcp instance on {env}: {unknown}")
     entities, dangling = loaded.closure(instance_ids)
-    target = out or OUT_ROOT / env / _slug(loaded.by_id[instance_ids[0]].name)
+    target = out or OUT_ROOT / env / _run_name(loaded, instance_ids)
     target.mkdir(parents=True, exist_ok=True)
     stems = _stems(entities)
     for entity in entities:
@@ -307,6 +314,18 @@ def _env_neutral(value: Any) -> Any:
     """``value`` with dev/prod host segments in URLs replaced by a placeholder."""
     dumped = json.dumps(value, ensure_ascii=False, sort_keys=True)
     return re.sub(r"(://[^/\s\"]*?)\b(dev|prod)\b", r"\1<env>", dumped)
+
+
+def _unordered(value: Any) -> Any:
+    """``value`` with lists of scalars sorted; lists of objects keep their order."""
+    if isinstance(value, dict):
+        return {k: _unordered(v) for k, v in value.items()}
+    if isinstance(value, list):
+        items = [_unordered(v) for v in value]
+        if all(v is None or isinstance(v, str | int | float | bool) for v in items):
+            return sorted(items, key=lambda v: json.dumps(v, sort_keys=True))
+        return items
+    return value
 
 
 def _compare_value(src: Any, dst: Any) -> list[str]:
@@ -357,8 +376,7 @@ def diff(
     dst_roots = [m.id for i in instance_ids if (m := match(src.by_id[i], dst))]
     dst_entities, dst_dangling = dst.closure(dst_roots)
 
-    root_name = _slug(src.by_id[instance_ids[0]].name)
-    out_dir = out or OUT_ROOT / f"diff-{source}-{target}" / root_name
+    out_dir = out or OUT_ROOT / f"diff-{source}-{target}" / _run_name(src, instance_ids)
     out_dir.mkdir(parents=True, exist_ok=True)
     stems = _stems(src_entities)
 
@@ -377,13 +395,20 @@ def diff(
             header += f"  (matched by name: {target} id {b.id})"
         changed: list[str] = []
         env_specific: list[str] = []
+        reordered: list[str] = []
         for key in sorted(
             {*a.data, *b.data} - BOOKKEEPING_KEYS - set(a.kind.ref_fields)
         ):
-            if a.data.get(key) == b.data.get(key):
+            src_value, dst_value = a.data.get(key), b.data.get(key)
+            if src_value == dst_value:
                 continue
-            if _env_neutral(a.data.get(key)) == _env_neutral(b.data.get(key)):
+            if _env_neutral(src_value) == _env_neutral(dst_value):
                 env_specific.append(key)
+                continue
+            if _env_neutral(_unordered(src_value)) == _env_neutral(
+                _unordered(dst_value)
+            ):
+                reordered.append(key)
                 continue
             changed.append(key)
             lines = _compare_value(a.data.get(key), b.data.get(key))
@@ -395,6 +420,8 @@ def diff(
         refs = _ref_drift(a, b, src, dst)
         if env_specific:
             header += f"  [env-specific URLs only in: {env_specific}]"
+        if reordered:
+            header += f"  [list order only in: {reordered}]"
         if not changed and not refs:
             typer.echo(f"IN SYNC  {header}")
             continue
